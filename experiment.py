@@ -20,11 +20,10 @@ def run_experiments(dataset_path='./WN18RR'):
         'ConvE': ConvE
     }
 
-    # 为了快速看图，这里 epoch 暂设为 100，实际实验可调大
     experiment_grid = {
-        'TransE': {'dim': [200], 'batch': [64], 'epoch': [100], 'lr': [0.001], 'eval_batch_size': [4], 'eval_freq': [10]},
-        'DistMult': {'dim': [200], 'batch': [128], 'epoch': [100], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [10]},
-        'ConvE': {'dim': [200], 'batch': [128], 'epoch': [100], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [10]}
+        'TransE': {'dim': [200], 'batch': [64], 'epoch': [10], 'lr': [0.001], 'eval_batch_size': [4], 'eval_freq': [10]},
+        'DistMult': {'dim': [200], 'batch': [128], 'epoch': [10], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [10]},
+        'ConvE': {'dim': [200], 'batch': [128], 'epoch': [10], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [10]}
     }
 
     final_results = []
