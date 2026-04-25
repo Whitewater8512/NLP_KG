@@ -71,7 +71,6 @@ class KGTrainer:
             best_mrr = 0.0
             scaler = torch.amp.GradScaler('cuda')
             
-            # 新增：记录整个训练过程的数据
             history = {
                 'epoch': [],
                 'train_loss': [],
@@ -123,7 +122,7 @@ class KGTrainer:
                 self.scheduler.step()
                 train_time = time.time() - epoch_start_time # 计算训练耗时
 
-                num_batches = len(range(len(self.train_data), self.config['batch']))
+                num_batches = len(range(0, len(self.train_data), self.config['batch']))
                 avg_loss = total_loss / num_batches
 
                 # 验证逻辑及时间记录
@@ -152,6 +151,6 @@ class KGTrainer:
             # 最终测试集评估
             test_mrr, test_h10 = self.evaluate_filtered(self.data.test)
             if verbose:
-                print(f"\n[Final Test] MRR: {test_mrr:.4f} | Hits@10: {test_h10:.4f}")
+                print(f"\n[Final Test] AvgLoss: {avg_loss:.1f} | MRR: {test_mrr:.4f} | Hits@10: {test_h10:.4f} | TrainT: {train_time:.1f}s | EvalT: {eval_time:.1f}s")
             
             return test_mrr, test_h10, history
