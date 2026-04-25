@@ -1,3 +1,4 @@
+import time
 import torch
 import numpy as np
 from collections import defaultdict
@@ -70,7 +71,18 @@ class KGTrainer:
             best_mrr = 0.0
             scaler = torch.amp.GradScaler('cuda')
             
+            # 新增：记录整个训练过程的数据
+            history = {
+                'epoch': [],
+                'train_loss': [],
+                'valid_mrr': [],
+                'valid_h10': [],
+                'train_time': [],
+                'eval_time': []
+            }
+            
             for epoch in range(self.config['epoch']):
+                epoch_start_time = time.time() # 记录 Epoch 开始时间
                 self.model.train()
                 
                 perm = torch.randperm(self.train_data.size(0), device=self.device)
@@ -109,17 +121,34 @@ class KGTrainer:
                             iterator.set_postfix(loss=f"{loss_val:.3f}")
 
                 self.scheduler.step()
+                train_time = time.time() - epoch_start_time # 计算训练耗时
 
+                # 验证逻辑及时间记录
                 eval_freq = self.config.get('eval_freq', 5)
+                eval_time = 0.0
+                mrr, h10 = None, None # 非评估 Epoch 设为 None
+                
                 if (epoch + 1) % eval_freq == 0:
+                    eval_start_time = time.time()
                     mrr, h10 = self.evaluate_filtered(self.data.valid)
+                    eval_time = time.time() - eval_start_time # 计算评估耗时
+                    
                     if mrr > best_mrr:
                         best_mrr = mrr
                     if verbose:
-                        print(f"Epoch {epoch+1:03d} | Loss {total_loss:.1f} | Valid MRR {mrr:.4f} | Hits@10 {h10:.4f}")
+                        print(f"Epoch {epoch+1:03d} | Loss {total_loss:.1f} | Valid MRR {mrr:.4f} | Hits@10 {h10:.4f} | TrainT {train_time:.1f}s | EvalT {eval_time:.1f}s")
 
+                # 将当前 Epoch 的数据记录到 history
+                history['epoch'].append(epoch + 1)
+                history['train_loss'].append(total_loss)
+                history['train_time'].append(train_time)
+                history['eval_time'].append(eval_time)
+                history['valid_mrr'].append(mrr)
+                history['valid_h10'].append(h10)
+
+            # 最终测试集评估
             test_mrr, test_h10 = self.evaluate_filtered(self.data.test)
             if verbose:
                 print(f"\n[Final Test] MRR: {test_mrr:.4f} | Hits@10: {test_h10:.4f}")
-                
-            return test_mrr, test_h10
+            
+            return test_mrr, test_h10, history
