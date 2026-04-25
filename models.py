@@ -2,12 +2,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
 class ConvE(nn.Module):
     def __init__(self, num_ent, num_rel, dim=200, label_smoothing=0.1):
         super().__init__()
         self.dim = dim
-        self.h = 10 
-        self.w = 20
+        
+        self.h = 10
+        self.w = self.dim // self.h
+        assert self.dim % self.h == 0, f"Dimension {self.dim} must be divisible by {self.h}"
+        
         self.label_smoothing = label_smoothing
 
         self.emb_e = nn.Embedding(num_ent, dim)
@@ -24,7 +31,12 @@ class ConvE(nn.Module):
         self.conv = nn.Conv2d(1, 32, 3, 1, 0)
         self.bn1 = nn.BatchNorm2d(32)
         self.bn2 = nn.BatchNorm1d(dim)
-        self.fc = nn.Linear(32 * 18 * 18, dim)
+        
+        out_h = (2 * self.h) - 3 + 1
+        out_w = self.w - 3 + 1
+        flat_size = 32 * out_h * out_w
+        
+        self.fc = nn.Linear(flat_size, dim)
 
     def forward(self, h, r):
         h_emb = self.emb_e(h).view(-1, 1, self.h, self.w)
@@ -37,6 +49,7 @@ class ConvE(nn.Module):
         x = self.bn1(x)
         x = F.relu(x)
         x = self.hidden_drop(x)
+        
         x = x.flatten(1)
         x = self.fc(x)
         x = self.bn2(x)
