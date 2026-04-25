@@ -123,6 +123,9 @@ class KGTrainer:
                 self.scheduler.step()
                 train_time = time.time() - epoch_start_time # 计算训练耗时
 
+                num_batches = len(range(len(self.train_data), self.config['batch']))
+                avg_loss = total_loss / num_batches
+
                 # 验证逻辑及时间记录
                 eval_freq = self.config.get('eval_freq', 5)
                 eval_time = 0.0
@@ -136,11 +139,11 @@ class KGTrainer:
                     if mrr > best_mrr:
                         best_mrr = mrr
                     if verbose:
-                        print(f"Epoch {epoch+1:03d} | Loss {total_loss:.1f} | Valid MRR {mrr:.4f} | Hits@10 {h10:.4f} | TrainT {train_time:.1f}s | EvalT {eval_time:.1f}s")
+                        print(f"Epoch {epoch+1:03d} | AvgLoss {avg_loss:.1f} | Valid MRR {mrr:.4f} | Hits@10 {h10:.4f} | TrainT {train_time:.1f}s | EvalT {eval_time:.1f}s")
 
                 # 将当前 Epoch 的数据记录到 history
                 history['epoch'].append(epoch + 1)
-                history['train_loss'].append(total_loss)
+                history['train_loss'].append(avg_loss)
                 history['train_time'].append(train_time)
                 history['eval_time'].append(eval_time)
                 history['valid_mrr'].append(mrr)
