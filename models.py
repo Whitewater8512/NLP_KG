@@ -109,3 +109,49 @@ class DistMult(nn.Module):
 
     def loss(self, logits, t):
         return F.cross_entropy(logits, t, label_smoothing=self.label_smoothing)
+
+class ComplEx(nn.Module):
+    def __init__(self, num_ent, num_rel, dim=200, label_smoothing=0.1):
+        super().__init__()
+        # 复数域需要实部和虚部，因此实际的 dim 是输入 dim 的一半，保证总参数量公平
+        self.dim = dim // 2  
+        self.label_smoothing = label_smoothing
+
+        # 实体和关系的 实部 (Real) 与 虚部 (Imaginary)
+        self.ent_re = nn.Embedding(num_ent, self.dim)
+        self.ent_im = nn.Embedding(num_ent, self.dim)
+        self.rel_re = nn.Embedding(num_rel * 2, self.dim)
+        self.rel_im = nn.Embedding(num_rel * 2, self.dim)
+
+        # 初始化 (极其关键)
+        nn.init.xavier_normal_(self.ent_re.weight)
+        nn.init.xavier_normal_(self.ent_im.weight)
+        nn.init.xavier_normal_(self.rel_re.weight)
+        nn.init.xavier_normal_(self.rel_im.weight)
+
+        self.drop = nn.Dropout(0.2)
+
+    def forward(self, h, r):
+        # 1. 提取头实体和关系的复数向量
+        h_re = self.drop(self.ent_re(h))
+        h_im = self.drop(self.ent_im(h))
+        r_re = self.drop(self.rel_re(r))
+        r_im = self.drop(self.rel_im(r))
+
+        # 2. 计算复数乘法 (h * r) 的实部和虚部
+        # (h_re + i * h_im) * (r_re + i * r_im)
+        q_re = h_re * r_re - h_im * r_im
+        q_im = h_re * r_im + h_im * r_re
+
+        # 3. 提取所有目标实体的共轭复数矩阵并转置 (用于 1-N 矩阵乘法)
+        # 尾实体 t 的共轭复数为: t_re - i * t_im
+        t_re = self.ent_re.weight.t()
+        t_im = self.ent_im.weight.t()
+
+        # 4. 计算最终得分 (取实部)
+        # Score = Re( <h * r, \bar{t}> )
+        score = torch.matmul(q_re, t_re) + torch.matmul(q_im, t_im)
+        return score
+
+    def loss(self, logits, t):
+        return F.cross_entropy(logits, t, label_smoothing=self.label_smoothing)
