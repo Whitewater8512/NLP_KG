@@ -21,9 +21,9 @@ def run_experiments(dataset_path='./WN18RR'):
     }
 
     experiment_grid = {
-        'TransE': {'dim': [200], 'batch': [64], 'epoch': [10], 'lr': [0.001], 'eval_batch_size': [4], 'eval_freq': [10]},
-        'DistMult': {'dim': [200], 'batch': [128], 'epoch': [10], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [10]},
-        'ConvE': {'dim': [200], 'batch': [128], 'epoch': [10], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [10]}
+        'TransE': {'dim': [100, 150, 200, 250], 'batch': [32, 64, 128], 'epoch': [10], 'lr': [0.001, 0.0005, 0.0001], 'eval_batch_size': [128], 'eval_freq': [10]},
+        'DistMult': {'dim': [100, 150, 200, 250], 'batch': [32, 64, 128], 'epoch': [10], 'lr': [0.001, 0.0005, 0.0001], 'eval_batch_size': [128], 'eval_freq': [10]},
+        'ConvE': {'dim': [100, 150, 200, 250], 'batch': [32, 64, 128], 'epoch': [10], 'lr': [0.001, 0.0005, 0.0001], 'eval_batch_size': [128], 'eval_freq': [10]}
     }
 
     final_results = []
