@@ -1,3 +1,4 @@
+import os
 import time
 import torch
 import numpy as np
@@ -6,9 +7,17 @@ from tqdm import tqdm
 
 class KGTrainer:
     def __init__(self, model, data, device, config):
+        model_name = model.__class__.__name__
+        self.model_id = f"{model_name}_D{config['dim']}_B{config['batch']}_L{config['lr']}"
+        
+        self.save_dir = 'weights'
+        os.makedirs(self.save_dir, exist_ok=True)
+        self.best_model_path = os.path.join(self.save_dir, f"{self.model_id}_best.pth")
+
         self.model = model.to(device)
         if int(torch.__version__.split('.')[0]) >= 2:
             self.model = torch.compile(self.model)
+            
         self.data = data
         self.device = device
         self.config = config
@@ -85,7 +94,7 @@ class KGTrainer:
         }
         
         for epoch in range(self.config['epoch']):
-            epoch_start_time = time.time() # 记录 Epoch 开始时间
+            epoch_start_time = time.time()
             self.model.train()
             
             perm = torch.randperm(self.train_data.size(0), device=self.device)
@@ -124,27 +133,32 @@ class KGTrainer:
                         iterator.set_postfix(loss=f"{loss_val:.3f}")
 
             self.scheduler.step()
-            train_time = time.time() - epoch_start_time # 计算训练耗时
+            train_time = time.time() - epoch_start_time
 
             num_batches = len(range(0, len(self.train_data), self.config['batch']))
             avg_loss = total_loss / num_batches
 
-            # 验证逻辑及时间记录
             eval_freq = self.config.get('eval_freq', 5)
             eval_time = 0.0
-            mrr, h10 = None, None # 非评估 Epoch 设为 None
+            mrr, h10 = None, None 
             
             if (epoch + 1) % eval_freq == 0:
                 eval_start_time = time.time()
                 mrr, h10 = self.evaluate_filtered(self.data.valid)
-                eval_time = time.time() - eval_start_time # 计算评估耗时
+                eval_time = time.time() - eval_start_time
                 
                 if mrr > best_mrr:
                     best_mrr = mrr
                     best_epoch = epoch + 1
                     wait = 0
+                    
+                    model_to_save = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+                    torch.save(model_to_save.state_dict(), self.best_model_path)
+                    if verbose:
+                        print(f"  [Save] 验证集破纪录，模型权重已保存至: {self.best_model_path}")
                 else:
                     wait += 1
+                    
                 if wait >= patience:
                     if verbose:
                         print(f"\nEarly stopping at epoch {epoch+1} (best epoch: {best_epoch}, best MRR: {best_mrr:.4f})")
@@ -155,10 +169,10 @@ class KGTrainer:
                         history['valid_mrr'].append(mrr)
                         history['valid_h10'].append(h10)
                     break
+                    
                 if verbose:
                     print(f"Epoch {epoch+1:03d} | AvgLoss {avg_loss:.1f} | Valid MRR {mrr:.4f} | Hits@10 {h10:.4f} | TrainT {train_time:.1f}s | EvalT {eval_time:.1f}s")
 
-            # 将当前 Epoch 的数据记录到 history
             history['epoch'].append(epoch + 1)
             history['train_loss'].append(avg_loss)
             history['train_time'].append(train_time)
@@ -166,7 +180,12 @@ class KGTrainer:
             history['valid_mrr'].append(mrr)
             history['valid_h10'].append(h10)
 
-        # 最终测试集评估
+        if os.path.exists(self.best_model_path):
+            if verbose:
+                print(f"\n[Load] 正在加载验证集最佳表现对应的模型权重 ({best_epoch} epoch) 进行最终测试...")
+            model_to_load = self.model._orig_mod if hasattr(self.model, '_orig_mod') else self.model
+            model_to_load.load_state_dict(torch.load(self.best_model_path))
+
         test_mrr, test_h10 = self.evaluate_filtered(self.data.test)
         if verbose:
             print(f"\n[Final Test] AvgLoss: {avg_loss:.1f} | MRR: {test_mrr:.4f} | Hits@10: {test_h10:.4f} | TrainT: {train_time:.1f}s | EvalT: {eval_time:.1f}s")
