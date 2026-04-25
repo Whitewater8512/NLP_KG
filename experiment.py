@@ -1,5 +1,6 @@
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+os.environ['TQDM_DISABLE'] = '1'  # 禁用 tqdm 输出，保持日志清晰
 
 import random
 import numpy as np
@@ -24,7 +25,7 @@ def set_seed(seed=42):
 
 def run_experiments(dataset_path='./WN18RR'):
     set_seed(42)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
     print(f"Loading data from {dataset_path} ...")
     data = KGDataset(dataset_path)
     
