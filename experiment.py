@@ -23,7 +23,6 @@ def set_seed(seed=42):
         torch.backends.cudnn.benchmark = False
 
 def run_experiments(dataset_path='./WN18RR'):
-    # 1. 初始化并固定种子
     set_seed(42)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Loading data from {dataset_path} ...")
@@ -36,13 +35,12 @@ def run_experiments(dataset_path='./WN18RR'):
         'ComplEx': ComplEx
     }
 
-    # 2. 根据模型底层特性，解耦并定制超参数网格
     experiment_grid = {
         'TransE': {
             'dim': [150, 200, 250], 
             'batch': [32, 64],  
-            'epoch': [150], 
-            'lr': [0.001, 0.0005], # 增加 LR 维度
+            'epoch': [100], 
+            'lr': [0.001, 0.0005],
             'eval_batch_size': [16], 
             'eval_freq': [5],
             'patience': [5]
@@ -50,7 +48,7 @@ def run_experiments(dataset_path='./WN18RR'):
         'DistMult': {
             'dim': [150, 200, 250], 
             'batch': [128, 256], 
-            'epoch': [150], 
+            'epoch': [100], 
             'lr': [0.005, 0.001], 
             'eval_batch_size': [64], 
             'eval_freq': [5],
@@ -59,7 +57,7 @@ def run_experiments(dataset_path='./WN18RR'):
         'ConvE': {
             'dim': [150, 200, 250], 
             'batch': [128, 256], 
-            'epoch': [150], 
+            'epoch': [100], 
             'lr': [0.005, 0.001], 
             'eval_batch_size': [64], 
             'eval_freq': [5],
@@ -68,7 +66,7 @@ def run_experiments(dataset_path='./WN18RR'):
         'ComplEx': {
             'dim': [150, 200, 250], 
             'batch': [128, 256], 
-            'epoch': [150], 
+            'epoch': [100], 
             'lr': [0.005, 0.001],
             'eval_batch_size': [64], 
             'eval_freq': [5],
