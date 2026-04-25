@@ -59,13 +59,11 @@ def run_experiments(dataset_path='./WN18RR'):
             
             trainer = KGTrainer(model, data, device, config)
             
-            # 关闭单步 epoch 打印以保持终端清爽
-            test_mrr, test_h10, history = trainer.train(verbose=False) 
+            test_mrr, test_h10, history = trainer.train(verbose=True) 
             
-            # 记录用于表格和绘图的数据
             record = {
                 'Model': model_name,
-                'Model_ID': model_id, # 增加唯一标识
+                'Model_ID': model_id,
                 **config,
                 'Test MRR': round(test_mrr, 4),
                 'Test Hits@10': round(test_h10, 4)
