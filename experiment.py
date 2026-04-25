@@ -28,9 +28,9 @@ def run_experiments(dataset_path='./WN18RR'):
 
     # DEBUG: 用于快速实验展示最终效果
     experiment_grid = {
-        'TransE': {'dim': [150, 200], 'batch': [64], 'epoch': [5], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [1]},
-        'DistMult': {'dim': [150, 200], 'batch': [64], 'epoch': [5], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [1]},
-        'ConvE': {'dim': [150, 200], 'batch': [64], 'epoch': [5], 'lr': [0.001], 'eval_batch_size': [128], 'eval_freq': [1]}
+        'TransE': {'dim': [150, 200], 'batch': [64], 'epoch': [5], 'lr': [0.001], 'eval_batch_size': [32], 'eval_freq': [1]},
+        'DistMult': {'dim': [150, 200], 'batch': [64], 'epoch': [5], 'lr': [0.001], 'eval_batch_size': [32], 'eval_freq': [1]},
+        'ConvE': {'dim': [150, 200], 'batch': [64], 'epoch': [5], 'lr': [0.001], 'eval_batch_size': [32], 'eval_freq': [1]}
     }
 
     all_results = []

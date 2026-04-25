@@ -3,7 +3,7 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
-MORANDI_PALETTE = ["#949483", "#B1A494", "#A1B3B3", "#D6C7C7", "#9B8E7D", "#E5E1D8", "#7A8B8B"]
+MORANDI_PALETTE = ["#4A6478", "#9C7A6D", "#586F6B", "#8F7179", "#B4956D", "#635C51", "#3E5254"]
 
 def plot_model_comparison(best_results_df, best_histories_dict):
     """
