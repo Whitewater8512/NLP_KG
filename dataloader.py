@@ -36,16 +36,3 @@ class KGDataset:
                 t = self.entity2id[t]
                 triples.append((h, r, t))
         return np.array(triples)
-
-# 负采样：随机替换头或尾
-def negative_sampling(pos_triple, num_entity, train_triples):
-    h, r, t = pos_triple
-    while True:
-        if np.random.random() < 0.5:
-            h_cor = np.random.randint(0, num_entity)
-            t_cor = t
-        else:
-            h_cor = h
-            t_cor = np.random.randint(0, num_entity)
-        if (h_cor, r, t_cor) not in train_triples:
-            return (h_cor, r, t_cor)
